@@ -231,6 +231,9 @@ static u_char  ngx_http_enhanced_memcached_crlf[] = CRLF;
 #define NGX_HTTP_ENHANCED_MEMCACHED_EXTRACT_HEADERS  (sizeof(ngx_http_enhanced_memcached_extract_headers) - 1)
 static u_char ngx_http_enhanced_memcached_extract_headers[] = "EXTRACT_HEADERS" CRLF;
 
+#define NGX_HTTP_ENHANCED_MEMCACHED_STATUS_403  (sizeof(ngx_http_enhanced_memcached_status_403) - 1)
+static u_char ngx_http_enhanced_memcached_status_403[] = "STATUS_403" CRLF;
+
 static ngx_int_t
 ngx_http_enhanced_memcached_handler(ngx_http_request_t *r)
 {
@@ -1156,6 +1159,14 @@ length:
         }
 
         u->buffer.pos += line.len + 2;
+
+        # If STATUS_403 found return 403
+        if (u->buffer.pos + NGX_HTTP_ENHANCED_MEMCACHED_STATUS_403 <= u->buffer.last
+          && ngx_strncmp(u->buffer.pos, ngx_http_enhanced_memcached_status_403, NGX_HTTP_ENHANCED_MEMCACHED_STATUS_403) == 0) {
+                      u->headers_in.status_n = 403;
+                      u->state->status = 403;
+                      return NGX_OK;
+          }
 
         if (u->buffer.pos + NGX_HTTP_ENHANCED_MEMCACHED_EXTRACT_HEADERS <= u->buffer.last
           && ngx_strncmp(u->buffer.pos, ngx_http_enhanced_memcached_extract_headers, NGX_HTTP_ENHANCED_MEMCACHED_EXTRACT_HEADERS) == 0) {
